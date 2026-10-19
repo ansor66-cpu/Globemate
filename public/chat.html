@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Globemate - Chat with GIF & Photo</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: #007bff; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .safety-notice { background: #fff3cd; color: #856404; font-size: 11px; padding: 6px; text-align: center; border-bottom: 1px solid #ffeeba; }
+        .chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 75%; padding: 10px 14px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+        .received { background: white; align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .sent { background: #007bff; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-image { max-width: 200px; border-radius: 10px; display: block; margin-top: 5px; }
+        
+        /* GIF Picker Popup */
+        #gif-picker { display: none; position: absolute; bottom: 70px; left: 10px; right: 10px; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-height: 150px; overflow-y: auto; text-align: center; }
+        .gif-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; cursor: pointer; margin: 4px; display: inline-block; border: 1px solid #ddd; }
+        .gif-thumb:hover { transform: scale(1.05); }
+
+        .input-area { background: white; padding: 10px; display: flex; gap: 6px; border-top: 1px solid #ddd; align-items: center; position: relative; }
+        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; }
+        .action-btn { background: #e9ecef; border: none; padding: 8px 10px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        button.send-btn { background: #007bff; color: white; border: none; padding: 10px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .back-link { color: white; text-decoration: none; font-size: 13px; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="profiles.html" class="back-link">← Back</a>
+    <span id="chat-title">Chat with Partner 🌍</span>
+    <span>💬 Live</span>
+</div>
+
+<div class="safety-notice">
+    ⚠️ Keep conversations safe and friendly!
+</div>
+
+<div class="chat-box" id="chat-messages">
+    <div class="message received">Hello! Send me a photo or a GIF! 👋</div>
+</div>
+
+<!-- GIF Selector Popup Box -->
+<div id="gif-picker">
+    <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold; color: #555;">Select a GIF:</p>
+    <img src="https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif" class="gif-thumb" onclick="sendGif('https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif')">
+    <img src="https://media.giphy.com/media/l0HlVJwZ62a4aGgqQ/giphy.gif" class="gif-thumb" onclick="sendGif('https://media.giphy.com/media/l0HlVJwZ62a4aGgqQ/giphy.gif')">
+    <img src="https://media.giphy.com/media/3o7TKoWXm3okO1kgHC/giphy.gif" class="gif-thumb" onclick="sendGif('https://media.giphy.com/media/3o7TKoWXm3okO1kgHC/giphy.gif')">
+    <img src="https://media.giphy.com/media/xT5LMGfRsLUsmNDFG8/giphy.gif" class="gif-thumb" onclick="sendGif('https://media.giphy.com/media/xT5LMGfRsLUsmNDFG8/giphy.gif')">
+</div>
+
+<div class="input-area">
+    <!-- Hidden file input for images -->
+    <input type="file" id="media-input" accept="image/*" style="display: none;" onchange="sendImage()">
+    <button class="action-btn" onclick="document.getElementById('media-input').click()" title="Upload Photo">📷</button>
+    
+    <!-- GIF Toggle Button -->
+    <button class="action-btn" onclick="toggleGifPicker()" title="Send GIF">GIF</button>
+    
+    <input type="text" id="msg-input" placeholder="Type a message..." onkeypress="handleKey(event)">
+    <button class="send-btn" onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+    function toggleGifPicker() {
+        let picker = document.getElementById("gif-picker");
+        picker.style.display = (picker.style.display === "block") ? "none" : "block";
+    }
+
+    function sendMessage() {
+        let input = document.getElementById("msg-input");
+        let text = input.value.trim();
+        if (text === "") return;
+
+        appendMessage(text, "sent", "text");
+        input.value = "";
+        document.getElementById("gif-picker").style.display = "none";
+
+        setTimeout(() => {
+            appendMessage("Got your message: \"" + text + "\" 👍", "received", "text");
+        }, 1000);
+    }
+
+    function sendImage() {
+        const file = document.getElementById('media-input').files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = function() {
+            appendMessage(reader.result, "sent", "image");
+            setTimeout(() => {
+                appendMessage("Great photo! 🌟", "received", "text");
+            }, 1000);
+        }
+        reader.readAsDataURL(file);
+    }
+
+    function sendGif(gifUrl) {
+        appendMessage(gifUrl, "sent", "image");
+        document.getElementById("gif-picker").style.display = "none";
+
+        setTimeout(() => {
+            appendMessage("Haha, nice GIF! 😂", "received", "text");
+        }, 1000);
+    }
+
+    function appendMessage(content, type, format) {
+        let chatBox = document.getElementById("chat-messages");
+        let msgDiv = document.createElement("div");
+        msgDiv.className = "message " + type;
+
+        if (format === "text") {
+            msgDiv.innerText = content;
+        } else {
+            let img = document.createElement("img");
+            img.src = content;
+            img.className = "chat-image";
+            msgDiv.appendChild(img);
+        }
+
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleKey(e) {
+        if (e.key === "Enter") {
+            sendMessage();
+        }
+    }
+</script>
+
+</body>
+</html>

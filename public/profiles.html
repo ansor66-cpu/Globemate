@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Globemate - Global Directory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; text-align: center; padding: 15px; margin: 0; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 15px auto; max-width: 300px; text-align: center; }
+        .avatar { width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 2px solid #007bff; margin-bottom: 8px; }
+        .btn { background: #007bff; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px; }
+        .lang-tag { background: #e9ecef; padding: 4px 8px; border-radius: 12px; font-size: 11px; display: inline-block; margin: 2px; }
+        .filter-box { background: white; padding: 10px; border-radius: 8px; max-width: 300px; margin: 0 auto 15px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        select { padding: 6px; border-radius: 5px; border: 1px solid #ccc; width: 100%; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<h2>Global Partners 🌍</h2>
+<p id="user-welcome" style="color: #28a745; font-weight: bold; font-size: 14px;"></p>
+
+<div class="filter-box">
+    <label style="font-size: 12px; font-weight: bold; color: #555;">Filter Partners By Gender:</label>
+    <select id="genderFilter" onchange="loadProfiles()">
+        <option value="All">Show Everyone</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Transgender">Transgender</option>
+    </select>
+</div>
+
+<div id="profiles-list"></div>
+
+<br>
+<a href="login.html" class="btn" style="background: #28a745;">+ Add My Profile</a>
+<br><br>
+<a href="index.html" style="color:#007bff; text-decoration:none; font-weight:bold; font-size:14px;">← Back to Home</a>
+
+<script>
+    let currentUser = localStorage.getItem("current_user");
+    if (currentUser) {
+        document.getElementById("user-welcome").innerText = "Logged in as: " + currentUser;
+    }
+
+    const defaultUsers = [
+        { name: "Alex", age: 24, country: "France 🇫🇷", gender: "Male", nativeLang: "French", learnLang: "English", photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" },
+        { name: "Yuki", age: 22, country: "Japan 🇯🇵", gender: "Female", nativeLang: "Japanese", learnLang: "Spanish", photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150" },
+        { name: "Taylor", age: 25, country: "USA 🇺🇸", gender: "Transgender", nativeLang: "English", learnLang: "German", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" }
+    ];
+
+    function loadProfiles() {
+        let filter = document.getElementById("genderFilter").value;
+        let extraUsers = JSON.parse(localStorage.getItem("globemate_users") || "[]");
+        let allUsers = [...defaultUsers, ...extraUsers];
+        
+        let container = document.getElementById("profiles-list");
+        container.innerHTML = "";
+
+        let filtered = allUsers.filter(u => filter === "All" || u.gender === filter);
+
+        if(filtered.length === 0) {
+            container.innerHTML = "<p style='color:#777; font-size:14px;'>No partners found for this filter.</p>";
+            return;
+        }
+
+        filtered.forEach(u => {
+            let div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+                <img src="${u.photo}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+                <h3>${u.name}, ${u.age}</h3>
+                <p style="margin:5px 0;">📍 ${u.country} | 👤 ${u.gender}</p>
+                <div>
+                    <span class="lang-tag">Speaks: ${u.nativeLang}</span>
+                    <span class="lang-tag">Learning: ${u.learnLang}</span>
+                </div>
+                <a href="chat.html" class="btn">Message ${u.name}</a>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    loadProfiles();
+</script>
+
+</body>
+</html>
